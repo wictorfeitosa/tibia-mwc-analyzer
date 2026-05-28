@@ -1,248 +1,229 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tibia MWC Analyzer</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-900 text-gray-100 min-h-screen p-6 flex flex-col justify-between">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Tibia MWC Analyzer</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+    </head>
+    <body class="bg-gray-900 text-gray-100 min-h-screen p-6 flex flex-col justify-between">
+        <div class="max-w-4xl w-full mx-auto space-y-6 mb-8">
+            <!-- HEADER -->
+            <header>
+                <h1 class="text-3xl font-bold text-amber-500">Tibia Mini World Changes Analyzer</h1>
+                <p class="text-gray-400 text-sm mt-1">
+                    Cole as linhas do seu Server Log abaixo para identificar os eventos ativos.
+                </p>
+            </header>
 
-    <div class="max-w-4xl w-full mx-auto space-y-6 mb-8">
-        
-        <!-- HEADER -->
-        <header>
-            <h1 class="text-3xl font-bold text-amber-500">Tibia Mini World Changes Analyzer</h1>
-            <p class="text-gray-400 text-sm mt-1">Cole as linhas do seu Server Log abaixo para identificar os eventos ativos.</p>
-        </header>
+            <!-- INPUT DE LOGS -->
+            <div>
+                <textarea
+                    id="serverLog"
+                    class="w-full h-44 p-4 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:border-amber-500 font-mono text-sm placeholder-gray-500"
+                    placeholder="16:50:47 Adventurers have told of a Spirit Gate in Chyllfroest."
+                ></textarea>
+            </div>
 
-        <!-- INPUT DE LOGS -->
-        <div>
-            <textarea id="serverLog" class="w-full h-44 p-4 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:border-amber-500 font-mono text-sm placeholder-gray-500" placeholder="16:50:47 Adventurers have told of a Spirit Gate in Chyllfroest."></textarea>
-        </div>
+            <button
+                onclick="processarLog()"
+                class="w-full md:w-auto px-6 py-3 bg-amber-600 hover:bg-amber-500 text-gray-900 font-bold rounded-lg transition shadow-lg"
+            >
+                🔍 Analisar Eventos Ativos
+            </button>
 
-        <button onclick="processarLog()" class="w-full md:w-auto px-6 py-3 bg-amber-600 hover:bg-amber-500 text-gray-900 font-bold rounded-lg transition dynamic shadow-lg">
-            🔍 Analisar Eventos Ativos
-        </button>
+            <!-- TABELA DE RESULTADOS MWC -->
+            <div class="bg-gray-800 border border-gray-700 rounded-lg overflow-hidden">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-750 border-b border-gray-700 text-amber-400 text-sm">
+                            <th class="p-4 w-1/2">Mini World Change (Evento)</th>
+                            <th class="p-4 w-1/2">Cidade / Localização Ativa</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelaResultados" class="divide-y divide-gray-700 text-sm">
+                        <tr>
+                            <td colspan="2" class="p-4 text-center text-gray-500 italic">
+                                Nenhum dado processado ainda.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
 
-        <!-- TABELA DE RESULTADOS MWC -->
-        <div class="bg-gray-800 border border-gray-700 rounded-lg overflow-hidden">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-gray-750 border-b border-gray-700 text-amber-400 text-sm">
-                        <th class="p-4 w-1/2">Mini World Change (Evento)</th>
-                        <th class="p-4 w-1/2">Cidade / Localização Ativa</th>
-                    </tr>
-                </thead>
-                <tbody id="tabelaResultados" class="divide-y divide-gray-700 text-sm">
-                    <tr>
-                        <td colspan="2" class="p-4 text-center text-gray-500 italic">Nenhum dado processado ainda.</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-
-        <!-- SEÇÃO DE ÚLTIMAS NOTÍCIAS (NEWS API) -->
-        <div class="bg-gray-800 border border-gray-700 rounded-lg p-4">
-            <h2 class="text-xl font-bold text-amber-500 mb-4 flex items-center gap-2">
-                📰 Últimas Notícias do Tibia
-            </h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                
-                <!-- Notícia 1 -->
-                <div class="bg-gray-850 p-4 rounded-md border border-gray-750 flex flex-col justify-between hover:border-amber-600 transition">
-                    <div>
-                        <span class="text-xs font-semibold text-gray-500 block mb-1">27/05/2026</span>
-                        <h3 class="text-amber-100 font-bold text-sm mb-2">Fixes and Changes</h3>
-                        <span class="inline-block bg-amber-900/40 text-amber-400 text-[10px] uppercase font-bold px-2 py-0.5 rounded">Development</span>
-                    </div>
-                    <a href="https://www.tibia.com/news/?subtopic=newsarchive&id=8831" target="_blank" class="mt-4 text-xs font-bold text-amber-500 hover:text-amber-400 inline-flex items-center gap-1">
-                        Ler no Tibia.com ➔
-                    </a>
+            <!-- SEÇÃO DE ÚLTIMAS NOTÍCIAS (DINÂMICA) -->
+            <div class="bg-gray-800 border border-gray-700 rounded-lg p-4">
+                <h2 class="text-xl font-bold text-amber-500 mb-4 flex items-center gap-2">
+                    📰 Últimas Notícias do Tibia
+                </h2>
+                <div id="containerNoticias" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <p class="text-gray-500 italic">Carregando notícias...</p>
                 </div>
-
-                <!-- Notícia 2 -->
-                <div class="bg-gray-850 p-4 rounded-md border border-gray-750 flex flex-col justify-between hover:border-amber-600 transition">
-                    <div>
-                        <span class="text-xs font-semibold text-gray-500 block mb-1">13/05/2026</span>
-                        <h3 class="text-amber-100 font-bold text-sm mb-2">New Optional and Open PvP Game Worlds</h3>
-                        <span class="inline-block bg-amber-900/40 text-amber-400 text-[10px] uppercase font-bold px-2 py-0.5 rounded">Development</span>
-                    </div>
-                    <a href="https://www.tibia.com/news/?subtopic=newsarchive&id=8766" target="_blank" class="mt-4 text-xs font-bold text-amber-500 hover:text-amber-400 inline-flex items-center gap-1">
-                        Ler no Tibia.com ➔
-                    </a>
-                </div>
-
-                <!-- Notícia 3 -->
-                <div class="bg-gray-850 p-4 rounded-md border border-gray-750 flex flex-col justify-between hover:border-amber-600 transition">
-                    <div>
-                        <span class="text-xs font-semibold text-gray-500 block mb-1">08/05/2026</span>
-                        <h3 class="text-amber-100 font-bold text-sm mb-2">Mounts and Outfit</h3>
-                        <span class="inline-block bg-amber-900/40 text-amber-400 text-[10px] uppercase font-bold px-2 py-0.5 rounded">Development</span>
-                    </div>
-                    <a href="https://www.tibia.com/news/?subtopic=newsarchive&id=8750" target="_blank" class="mt-4 text-xs font-bold text-amber-500 hover:text-amber-400 inline-flex items-center gap-1">
-                        Ler no Tibia.com ➔
-                    </a>
-                </div>
-
             </div>
         </div>
 
-    </div>
+        <!-- FOOTER -->
+        <footer class="w-full text-center py-4 border-t border-gray-800 text-sm text-gray-500 mt-auto">
+            <div class="max-w-4xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2 px-2">
+                <p>© 2026 Tibia MWC Analyzer - Dados obtidos via TibiaWiki e TibiaData API.</p>
+                <a
+                    href="https://github.com/wictorfeitosa"
+                    target="_blank"
+                    class="inline-flex items-center gap-2 text-gray-400 hover:text-amber-500 transition font-medium"
+                >
+                    <span>Desenvolvido por <strong>wictorfeitosa</strong></span>
+                </a>
+            </div>
+        </footer>
 
-    <!-- FOOTER COM LINK DO GITHUB -->
-    <footer class="w-full text-center py-4 border-t border-gray-800 text-sm text-gray-500 mt-auto">
-        <div class="max-w-4xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2 px-2">
-            <p>© 2026 Tibia MWC Analyzer - Dados obtidos via TibiaWiki e TibiaData API.</p>
-            <a href="https://github.com/wictorfeitosa" target="_blank" class="inline-flex items-center gap-2 text-gray-400 hover:text-amber-500 transition font-medium">
-                <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24" aria-hidden="true">
-                    <path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd"></path>
-                </svg>
-                <span>Desenvolvido por <strong class="font-bold">wictorfeitosa</strong></span>
-            </a>
-        </div>
-    </footer>
+        <script>
+            const mapeamentoEventos = {
+                "Several banks in major coastal towns are being robbed!": "Bank Robbery",
+                "Bibby Bloodbath and her crew are roaming the lands": "Bibby Bloodbath",
+                "Sharpen your sword! The witch Wyda seems to be bored": "Bored Witch",
+                "A big iceberg has been washed up at the coast north of Port Hope": "Chakoya Iceberg",
+                "In case you have some spare tentacle pieces, you can now use Devovorga": "Devovorga's Essence",
+                "Strange sounds echo through Trapwood as hunters and dworcs fight": "Dworc Camp / Hunter Camp",
+                "A fiery fury gate has opened near one of the major cities": "Fury Gates",
+                "The volcano on Goroma sends its fiery message into the sky": "Goroma Eruption",
+                "The full moon has a strange impact on the island of Grimvale": "Grimvale Moon",
+                "A hive infestation has been sighted south-west of Liberty Bay": "Hive Outpost",
+                "Looks like the Queen's own royal trees are being cut down": "Lumberjack",
+                "A sandstorm travels through Darama, leading to isles full of deadly creatures": "Nightmare Isles",
+                "Nomads travel the eternal sands of Ankrahmun's desert": "Nomads",
+                "Not again! Noodles has taken some royal freedom and left the castle": "Noodles is Gone",
+                "The wild animals north of the Green Claw Swamp clearly dominate the area": "Orc Land (Wildlife)",
+                "Poachers are ravaging the wildlife north of the Green Claw Swamp": "Orc Land (Poachers)",
+                "Poachers have slaughtered nearly all wild animals north of the Green Claw Swamp":
+                    "Orc Land (Hauntings)",
+                "Oriental ships sighted! A trader for exotic creature products": "Oriental Trader (Yasir)",
+                "The river south of the outlaw camp is flooding": "River Flood",
+                "The river in Zao Steppe runs deep, there may be more fish": "River Runs Deep",
+                "A whole nest of spiders needs to be exterminated as Mamma Longlegs": "Spider's Nest",
+                "Adventurers have told of a Spirit Gate": "Spirit Gate",
+                "Stampede! The Ape God has stirred up Tiquanda's elephants": "Stampede",
+                "Hail to the King! It's Kingsday in Thais": "Thais Kingsday",
+                "Judging by the unnerved mammoths in Svargrond, enough snow has melted": "Thawing",
+            };
 
-    <script>
-        // O restante do seu script JavaScript permanece igual...
-        const mapeamentoEventos = {
-            "Several banks in major coastal towns are being robbed!": "Bank Robbery",
-            "Bibby Bloodbath and her crew are roaming the lands": "Bibby Bloodbath",
-            "Sharpen your sword! The witch Wyda seems to be bored": "Bored Witch",
-            "A big iceberg has been washed up at the coast north of Port Hope": "Chakoya Iceberg",
-            "In case you have some spare tentacle pieces, you can now use Devovorga": "Devovorga's Essence",
-            "Strange sounds echo through Trapwood as hunters and dworcs fight": "Dworc Camp / Hunter Camp",
-            "A fiery fury gate has opened near one of the major cities": "Fury Gates",
-            "The volcano on Goroma sends its fiery message into the sky": "Goroma Eruption",
-            "The full moon has a strange impact on the island of Grimvale": "Grimvale Moon",
-            "A hive infestation has been sighted south-west of Liberty Bay": "Hive Outpost",
-            "Looks like the Queen's own royal trees are being cut down": "Lumberjack",
-            "A sandstorm travels through Darama, leading to isles full of deadly creatures": "Nightmare Isles",
-            "Nomads travel the eternal sands of Ankrahmun's desert": "Nomads",
-            "Not again! Noodles has taken some royal freedom and left the castle": "Noodles is Gone",
-            "The wild animals north of the Green Claw Swamp clearly dominate the area": "Orc Land (Wildlife)",
-            "Poachers are ravaging the wildlife north of the Green Claw Swamp": "Orc Land (Poachers)",
-            "Poachers have slaughtered nearly all wild animals north of the Green Claw Swamp": "Orc Land (Hauntings)",
-            "Oriental ships sighted! A trader for exotic creature products": "Oriental Trader (Yasir)",
-            "The river south of the outlaw camp is flooding": "River Flood",
-            "The river in Zao Steppe runs deep, there may be more fish": "River Runs Deep",
-            "A whole nest of spiders needs to be exterminated as Mamma Longlegs": "Spider's Nest",
-            "Adventurers have told of a Spirit Gate": "Spirit Gate",
-            "Stampede! The Ape God has stirred up Tiquanda's elephants": "Stampede",
-            "Hail to the King! It's Kingsday in Thais": "Thais Kingsday",
-            "Judging by the unnerved mammoths in Svargrond, enough snow has melted": "Thawing"
-        };
+            const locaisFixos = {
+                "Dworc Camp / Hunter Camp": "Tiquanda (Trapwood)",
+                "Chakoya Iceberg": "Port Hope (North Coast)",
+                "Goroma Eruption": "Goroma",
+                "Grimvale Moon": "Grimvale",
+                "Hive Outpost": "Liberty Bay (South-West)",
+                Lumberjack: "Carlin (North)",
+                Nomads: "Ankrahmun (Desert)",
+                "River Flood": "Outlaw Camp (South)",
+                "River Runs Deep": "Zao Steppe",
+                Stampede: "Tiquanda",
+                "Thais Kingsday": "Thais",
+                Thawing: "Svargrond",
+                "Bored Witch": "Green Claw Swamp (Wyda)",
+                "Oriental Trader (Yasir)": "Carlin / Ankrahmun / Liberty Bay",
+                "Bibby Bloodbath": "Global / Múltiplas Cidades",
+                "Bank Robbery": "Global / Múltiplas Cidades",
+                "Noodles is Gone": "Global / Múltiplas Cidades",
+                "Orc Land (Wildlife)": "Orc Land",
+                "Orc Land (Poachers)": "Orc Land",
+                "Orc Land (Hauntings)": "Orc Land",
+            };
 
-        const locaisFixos = {
-            "Dworc Camp / Hunter Camp": "Tiquanda (Trapwood)",
-            "Chakoya Iceberg": "Port Hope (North Coast)",
-            "Goroma Eruption": "Goroma",
-            "Grimvale Moon": "Grimvale",
-            "Hive Outpost": "Liberty Bay (South-West)",
-            "Lumberjack": "Carlin (North)",
-            "Nomads": "Ankrahmun (Desert)",
-            "River Flood": "Outlaw Camp (South)",
-            "River Runs Deep": "Zao Steppe",
-            "Stampede": "Tiquanda",
-            "Thais Kingsday": "Thais",
-            "Thawing": "Svargrond",
-            "Bored Witch": "Green Claw Swamp (Wyda)",
-            "Oriental Trader (Yasir)": "Carlin / Ankrahmun / Liberty Bay",
-            "Bibby Bloodbath": "Global / Múltiplas Cidades",
-            "Bank Robbery": "Global / Múltiplas Cidades",
-            "Noodles is Gone": "Global / Múltiplas Cidades",
-            "Orc Land (Wildlife)": "Orc Land",
-            "Orc Land (Poachers)": "Orc Land",
-            "Orc Land (Hauntings)": "Orc Land"
-        };
+            const linksWiki = {
+                "Bank Robbery": "https://tibia.fandom.com/wiki/Bank_Robbery_Mini_World_Change",
+                "Bibby Bloodbath": "https://tibia.fandom.com/wiki/Warpath_Mini_World_Change",
+                "Bored Witch": "https://tibia.fandom.com/wiki/Bored_Mini_World_Change",
+                "Chakoya Iceberg": "https://tibia.fandom.com/wiki/Chakoya_Iceberg_Mini_World_Change",
+                "Devovorga's Essence": "https://tibia.fandom.com/wiki/Devovorga%27s_Essence_Mini_World_Change",
+                "Dworc Camp / Hunter Camp": "https://tibia.fandom.com/wiki/Jungle_Camp_Mini_World_Change",
+                "Fury Gates": "https://tibia.fandom.com/wiki/Fury_Gates_Mini_World_Change",
+                "Goroma Eruption": "https://tibia.fandom.com/wiki/Fire_from_the_Earth_Mini_World_Change",
+                "Grimvale Moon": "https://tibia.fandom.com/wiki/Grimvale_Mini_World_Change",
+                "Hive Outpost": "https://tibia.fandom.com/wiki/Hive_Outpost_Mini_World_Change",
+                Lumberjack: "https://tibia.fandom.com/wiki/Lumberjack_Mini_World_Change",
+                "Nightmare Isles": "https://tibia.fandom.com/wiki/Nightmare_Isles_Mini_World_Change",
+                Nomads: "https://tibia.fandom.com/wiki/Nomads_Mini_World_Change",
+                "Noodles is Gone": "https://tibia.fandom.com/wiki/Noodles_is_Gone_Mini_World_Change",
+                "Orc Land (Wildlife)": "https://tibia.fandom.com/wiki/Poacher_Caves_Mini_World_Change",
+                "Orc Land (Poachers)": "https://tibia.fandom.com/wiki/Poacher_Caves_Mini_World_Change",
+                "Orc Land (Hauntings)": "https://tibia.fandom.com/wiki/Poacher_Caves_Mini_World_Change",
+                "Oriental Trader (Yasir)": "https://tibia.fandom.com/wiki/Oriental_Trader_Mini_World_Change",
+                "River Flood": "https://tibia.fandom.com/wiki/Down_the_Drain_Mini_World_Change",
+                "River Runs Deep": "https://tibia.fandom.com/wiki/River_Runs_Deep_Mini_World_Change",
+                "Spider's Nest": "https://tibia.fandom.com/wiki/Spider_Nest_Mini_World_Change",
+                "Spirit Gate": "https://tibia.fandom.com/wiki/Spirit_Grounds_Mini_World_Change",
+                Stampede: "https://tibia.fandom.com/wiki/Stampede_Mini_World_Change",
+                "Thais Kingsday": "https://tibia.fandom.com/wiki/Kingsday_Mini_World_Change",
+                Thawing: "https://tibia.fandom.com/wiki/Thawing_Mini_World_Change",
+            };
 
-        const linksWiki = {
-            "Bank Robbery": "https://tibia.fandom.com/wiki/Bank_Robbery_Mini_World_Change",
-            "Bibby Bloodbath": "https://tibia.fandom.com/wiki/Warpath_Mini_World_Change",
-            "Bored Witch": "https://tibia.fandom.com/wiki/Bored_Mini_World_Change",
-            "Chakoya Iceberg": "https://tibia.fandom.com/wiki/Chakoya_Iceberg_Mini_World_Change",
-            "Devovorga's Essence": "https://tibia.fandom.com/wiki/Devovorga%27s_Essence_Mini_World_Change",
-            "Dworc Camp / Hunter Camp": "https://tibia.fandom.com/wiki/Jungle_Camp_Mini_World_Change",
-            "Fury Gates": "https://tibia.fandom.com/wiki/Fury_Gates_Mini_World_Change",
-            "Goroma Eruption": "https://tibia.fandom.com/wiki/Fire_from_the_Earth_Mini_World_Change",
-            "Grimvale Moon": "https://tibia.fandom.com/wiki/Grimvale_Mini_World_Change",
-            "Hive Outpost": "https://tibia.fandom.com/wiki/Hive_Outpost_Mini_World_Change",
-            "Lumberjack": "https://tibia.fandom.com/wiki/Lumberjack_Mini_World_Change",
-            "Nightmare Isles": "https://tibia.fandom.com/wiki/Nightmare_Isles_Mini_World_Change",
-            "Nomads": "https://tibia.fandom.com/wiki/Nomads_Mini_World_Change",
-            "Noodles is Gone": "https://tibia.fandom.com/wiki/Noodles_is_Gone_Mini_World_Change",
-            "Orc Land (Wildlife)": "https://tibia.fandom.com/wiki/Poacher_Caves_Mini_World_Change",
-            "Orc Land (Poachers)": "https://tibia.fandom.com/wiki/Poacher_Caves_Mini_World_Change",
-            "Orc Land (Hauntings)": "https://tibia.fandom.com/wiki/Poacher_Caves_Mini_World_Change",
-            "Oriental Trader (Yasir)": "https://tibia.fandom.com/wiki/Oriental_Trader_Mini_World_Change",
-            "River Flood": "https://tibia.fandom.com/wiki/Down_the_Drain_Mini_World_Change",
-            "River Runs Deep": "https://tibia.fandom.com/wiki/River_Runs_Deep_Mini_World_Change",
-            "Spider's Nest": "https://tibia.fandom.com/wiki/Spider_Nest_Mini_World_Change",
-            "Spirit Gate": "https://tibia.fandom.com/wiki/Spirit_Grounds_Mini_World_Change",
-            "Stampede": "https://tibia.fandom.com/wiki/Stampede_Mini_World_Change",
-            "Thais Kingsday": "https://tibia.fandom.com/wiki/Kingsday_Mini_World_Change",
-            "Thawing": "https://tibia.fandom.com/wiki/Thawing_Mini_World_Change"
-        };
-
-        function extrairLocalizacao(nomeEvento, textoLinha) {
-            const textoLower = textoLinha.toLowerCase();
-
-            if (nomeEvento === "Spirit Gate") {
-                const match = textoLinha.match(/in\s+([A-Z][a-zA-Z\s]+)\./);
-                if (match) return match[1].trim();
+            function extrairLocalizacao(nomeEvento, textoLinha) {
+                const textoLower = textoLinha.toLowerCase();
+                if (nomeEvento === "Spirit Gate") {
+                    const match = textoLinha.match(/in\s+([A-Z][a-zA-Z\s]+)\./);
+                    if (match) return match[1].trim();
+                }
+                if (nomeEvento === "Nightmare Isles") {
+                    if (textoLower.includes("tar pits")) return "Ankrahmun (Tar Pits)";
+                    if (textoLower.includes("northernmost coast")) return "Darashia (Coast)";
+                    if (textoLower.includes("river near drefia")) return "Drefia (River)";
+                }
+                return locaisFixos[nomeEvento] || "Global / Múltiplas Cidades";
             }
 
-            if (nomeEvento === "Nightmare Isles") {
-                if (textoLower.includes("tar pits")) return "Ankrahmun (Tar Pits)";
-                if (textoLower.includes("northernmost coast")) return "Darashia (Coast)";
-                if (textoLower.includes("river near drefia")) return "Drefia (River)";
-            }
-
-            return locaisFixos[nomeEvento] || "Global / Múltiplas Cidades";
-        }
-
-        function processarLog() {
-            const logTexto = document.getElementById("serverLog").value;
-            const linhas = logTexto.split(/\r?\n/);
-            const tabelaBody = document.getElementById("tabelaResultados");
-
-            tabelaBody.innerHTML = ""; 
-
-            let encontrouAlgum = false;
-            const eventosAdicionados = new Set();
-
-            linhas.forEach(linha => {
-                const linhaLimpa = linha.replace(/^\d{2}:\d{2}:\d{2}\s+/, "").trim();
-
-                for (const [mensagemChave, nomeEvento] of Object.entries(mapeamentoEventos)) {
-                    if (linhaLimpa.includes(mensagemChave)) {
-                        if (!eventosAdicionados.has(nomeEvento)) {
-                            const localizacao = extrairLocalizacao(nomeEvento, linhaLimpa);
-                            
-                            const urlWiki = linksWiki[nomeEvento] || "https://tibia.fandom.com/wiki/Mini_World_Changes";
-
-                            const novaLinha = `<tr class="hover:bg-gray-750 transition border-b border-gray-700">
-                                <td class="p-4 font-semibold">
-                                    <a href="${urlWiki}" target="_blank" class="text-amber-400 hover:text-amber-300 hover:underline inline-flex items-center gap-1">
-                                        ${nomeEvento} <span class="text-xs opacity-50">↗</span>
-                                    </a>
-                                </td>
+            function processarLog() {
+                const logTexto = document.getElementById("serverLog").value;
+                const linhas = logTexto.split(/\r?\n/);
+                const tabelaBody = document.getElementById("tabelaResultados");
+                tabelaBody.innerHTML = "";
+                let encontrouAlgum = false;
+                const eventosAdicionados = new Set();
+                linhas.forEach((linha) => {
+                    const linhaLimpa = linha.replace(/^\d{2}:\d{2}:\d{2}\s+/, "").trim();
+                    for (const [mensagemChave, nomeEvento] of Object.entries(mapeamentoEventos)) {
+                        if (linhaLimpa.includes(mensagemChave)) {
+                            if (!eventosAdicionados.has(nomeEvento)) {
+                                const localizacao = extrairLocalizacao(nomeEvento, linhaLimpa);
+                                const urlWiki =
+                                    linksWiki[nomeEvento] || "https://tibia.fandom.com/wiki/Mini_World_Changes";
+                                tabelaBody.innerHTML += `<tr class="hover:bg-gray-750 transition border-b border-gray-700">
+                                <td class="p-4 font-semibold"><a href="${urlWiki}" target="_blank" class="text-amber-400 hover:underline">${nomeEvento} ↗</a></td>
                                 <td class="p-4 text-gray-300">${localizacao}</td>
                             </tr>`;
-
-                            tabelaBody.innerHTML += novaLinha;
-                            eventosAdicionados.add(nomeEvento);
-                            encontrouAlgum = true;
+                                eventosAdicionados.add(nomeEvento);
+                                encontrouAlgum = true;
+                            }
+                            break;
                         }
-                        break;
                     }
-                }
-            });
-
-            if (!encontrouAlgum && logTexto.trim() !== "") {
-                tabelaBody.innerHTML = `<tr><td colspan="2" class="p-4 text-center text-red-400 font-semibold">Nenhum Mini World Change ativo encontrado.</td></tr>`;
+                });
+                if (!encontrouAlgum && logTexto.trim() !== "")
+                    tabelaBody.innerHTML = `<tr><td colspan="2" class="p-4 text-center text-red-400 font-semibold">Nenhum evento detectado.</td></tr>`;
             }
-        }
-    </script>
-</body>
+
+            async function carregarNoticias() {
+                const container = document.getElementById("containerNoticias");
+                try {
+                    const response = await fetch("https://api.tibiadata.com/v4/news/latest");
+                    const data = await response.json();
+                    container.innerHTML = "";
+                    data.news.slice(0, 3).forEach((item) => {
+                        const d = item.date.split("-");
+                        const dataFormatada = `${d[2]}/${d[1]}/${d[0]}`;
+                        container.innerHTML += `<div class="bg-gray-850 p-4 rounded-md border border-gray-750 flex flex-col justify-between hover:border-amber-600 transition">
+                        <div>
+                            <span class="text-xs font-semibold text-gray-500 block mb-1">${dataFormatada}</span>
+                            <h3 class="text-amber-100 font-bold text-sm mb-2">${item.news}</h3>
+                            <span class="inline-block bg-amber-900/40 text-amber-400 text-[10px] uppercase font-bold px-2 py-0.5 rounded">${item.category}</span>
+                        </div>
+                        <a href="${item.url}" target="_blank" class="mt-4 text-xs font-bold text-amber-500 hover:text-amber-400 inline-flex items-center gap-1">Ler no Tibia.com ➔</a>
+                    </div>`;
+                    });
+                } catch (e) {
+                    container.innerHTML = `<p class="text-red-400">Erro ao carregar notícias.</p>`;
+                }
+            }
+            carregarNoticias();
+        </script>
+    </body>
 </html>
