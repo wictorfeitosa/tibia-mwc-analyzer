@@ -15,13 +15,13 @@
             <p class="text-gray-400 text-sm mt-1">Cole as linhas do seu Server Log abaixo para identificar os eventos ativos.</p>
         </header>
 
-        <!-- ÁREA DE INPUT -->
+        <!-- ÁREA DE INPUT COM CONTADOR E BLOQUEIO -->
         <div class="relative">
             <textarea id="serverLog" 
                 oninput="atualizarContador()"
                 maxlength="5001" 
                 class="w-full h-44 p-4 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:border-amber-500 font-mono text-sm placeholder-gray-500" 
-                placeholder="Ex: 16:50:47 Adventurers have told of a Spirit Gate in Chyllfroest."></textarea>
+                placeholder="Ex: 16:50:47 Poachers have slaughtered nearly all wild animals..."></textarea>
             
             <div id="contador" class="absolute bottom-2 right-4 text-xs text-gray-500 font-mono">
                 0 / 5000
@@ -33,9 +33,9 @@
             🔍 Analisar Eventos Ativos
         </button>
 
-        <!-- MENSAGEM DE AVISO -->
+        <!-- MENSAGEM DE AVISO (HIDDEN POR PADRÃO) -->
         <p id="avisoLimite" class="text-red-500 text-sm font-bold hidden -mt-4">
-            ⚠️ Aviso: O texto excedeu o limite de 5000 caracteres. Por favor, reduza o conteúdo.
+            ⚠️ Aviso: O texto excedeu o limite de 5000 caracteres.
         </p>
 
         <!-- TABELA DE RESULTADOS -->
@@ -55,6 +55,7 @@
             </table>
         </div>
 
+        <!-- NOTÍCIAS -->
         <div class="bg-gray-800 border border-gray-700 rounded-lg p-4">
             <h2 class="text-xl font-bold text-amber-500 mb-4 flex items-center gap-2">
                 📰 Últimas Notícias do Tibia
@@ -70,6 +71,7 @@
     </footer>
 
     <script>
+        // Mapeamento completo com as fases da Poacher Caves
         const mapeamentoEventos = {
             "Several banks in major coastal towns are being robbed!": "Bank Robbery",
             "Bibby Bloodbath and her crew are roaming the lands": "Bibby Bloodbath",
@@ -85,9 +87,10 @@
             "A sandstorm travels through Darama, leading to isles full of deadly creatures": "Nightmare Isles",
             "Nomads travel the eternal sands of Ankrahmun's desert": "Nomads",
             "Not again! Noodles has taken some royal freedom and left the castle": "Noodles is Gone",
-            "The wild animals north of the Green Claw Swamp clearly dominate the area": "Orc Land (Wildlife)",
-            "Poachers are ravaging the wildlife north of the Green Claw Swamp": "Orc Land (Poachers)",
-            "Poachers have slaughtered nearly all wild animals north of the Green Claw Swamp": "Orc Land (Hauntings)",
+            // Fases da Poacher Caves
+            "The wild animals north of the Green Claw Swamp clearly dominate the area": "Poacher Caves (Bears/Boars/Wolves)",
+            "Poachers are ravaging the wildlife north of the Green Claw Swamp": "Poacher Caves (Hunters/Poachers)",
+            "Poachers have slaughtered nearly all wild animals north of the Green Claw Swamp. But vengeful spirits show up there now!": "Poacher Caves (Gloom/Ghost Wolves)",
             "Oriental ships sighted! A trader for exotic creature products": "Oriental Trader (Yasir)",
             "The river south of the outlaw camp is flooding": "River Flood",
             "The river in Zao Steppe runs deep, there may be more fish": "River Runs Deep",
@@ -99,43 +102,15 @@
         };
 
         const locaisFixos = {
-            "Dworc Camp / Hunter Camp": "Tiquanda (Trapwood)", "Chakoya Iceberg": "Port Hope (North Coast)",
-            "Goroma Eruption": "Goroma", "Grimvale Moon": "Grimvale", "Hive Outpost": "Liberty Bay (South-West)",
-            "Lumberjack": "Carlin (North)", "Nomads": "Ankrahmun (Desert)", "River Flood": "Outlaw Camp (South)",
-            "River Runs Deep": "Zao Steppe", "Stampede": "Tiquanda", "Thais Kingsday": "Thais",
-            "Thawing": "Svargrond", "Bored Witch": "Green Claw Swamp (Wyda)", "Oriental Trader (Yasir)": "Carlin / Ankrahmun / Liberty Bay",
-            "Bibby Bloodbath": "Global", "Bank Robbery": "Global", "Noodles is Gone": "Global",
-            "Orc Land (Wildlife)": "Orc Land", "Orc Land (Poachers)": "Orc Land", "Orc Land (Hauntings)": "Orc Land"
+            "Poacher Caves (Bears/Boars/Wolves)": "Orc Land (Cave Norte - Animais)",
+            "Poacher Caves (Hunters/Poachers)": "Orc Land (Cave Norte - Caçadores)",
+            "Poacher Caves (Gloom/Ghost Wolves)": "Orc Land (Cave Norte - Espíritos)",
+            "Bored Witch": "Green Claw Swamp (Wyda)", 
+            "Oriental Trader (Yasir)": "Carlin / Ankrahmun / Liberty Bay",
+            "Bibby Bloodbath": "Global", "Bank Robbery": "Global", "Noodles is Gone": "Global"
         };
 
-        const linksWiki = {
-            "Bank Robbery": "https://tibia.fandom.com/wiki/Bank_Robbery_Mini_World_Change",
-            "Bibby Bloodbath": "https://tibia.fandom.com/wiki/Warpath_Mini_World_Change",
-            "Bored Witch": "https://tibia.fandom.com/wiki/Bored_Mini_World_Change",
-            "Chakoya Iceberg": "https://tibia.fandom.com/wiki/Chakoya_Iceberg_Mini_World_Change",
-            "Devovorga's Essence": "https://tibia.fandom.com/wiki/Devovorga%27s_Essence_Mini_World_Change",
-            "Dworc Camp / Hunter Camp": "https://tibia.fandom.com/wiki/Jungle_Camp_Mini_World_Change",
-            "Fury Gates": "https://tibia.fandom.com/wiki/Fury_Gates_Mini_World_Change",
-            "Goroma Eruption": "https://tibia.fandom.com/wiki/Fire_from_the_Earth_Mini_World_Change",
-            "Grimvale Moon": "https://tibia.fandom.com/wiki/Grimvale_Mini_World_Change",
-            "Hive Outpost": "https://tibia.fandom.com/wiki/Hive_Outpost_Mini_World_Change",
-            "Lumberjack": "https://tibia.fandom.com/wiki/Lumberjack_Mini_World_Change",
-            "Nightmare Isles": "https://tibia.fandom.com/wiki/Nightmare_Isles_Mini_World_Change",
-            "Nomads": "https://tibia.fandom.com/wiki/Nomads_Mini_World_Change",
-            "Noodles is Gone": "https://tibia.fandom.com/wiki/Noodles_is_Gone_Mini_World_Change",
-            "Orc Land (Wildlife)": "https://tibia.fandom.com/wiki/Poacher_Caves_Mini_World_Change",
-            "Orc Land (Poachers)": "https://tibia.fandom.com/wiki/Poacher_Caves_Mini_World_Change",
-            "Orc Land (Hauntings)": "https://tibia.fandom.com/wiki/Poacher_Caves_Mini_World_Change",
-            "Oriental Trader (Yasir)": "https://tibia.fandom.com/wiki/Oriental_Trader_Mini_World_Change",
-            "River Flood": "https://tibia.fandom.com/wiki/Down_the_Drain_Mini_World_Change",
-            "River Runs Deep": "https://tibia.fandom.com/wiki/River_Runs_Deep_Mini_World_Change",
-            "Spider's Nest": "https://tibia.fandom.com/wiki/Spider_Nest_Mini_World_Change",
-            "Spirit Gate": "https://tibia.fandom.com/wiki/Spirit_Grounds_Mini_World_Change",
-            "Stampede": "https://tibia.fandom.com/wiki/Stampede_Mini_World_Change",
-            "Thais Kingsday": "https://tibia.fandom.com/wiki/Kingsday_Mini_World_Change",
-            "Thawing": "https://tibia.fandom.com/wiki/Thawing_Mini_World_Change"
-        };
-
+        // Função de atualização do contador e bloqueio de botão
         function atualizarContador() {
             const textarea = document.getElementById("serverLog");
             const contador = document.getElementById("contador");
@@ -171,9 +146,8 @@
                 for (const [mensagemChave, nomeEvento] of Object.entries(mapeamentoEventos)) {
                     if (linhaLimpa.includes(mensagemChave)) {
                         if (!eventosAdicionados.has(nomeEvento)) {
-                            const urlWiki = linksWiki[nomeEvento] || "https://tibia.fandom.com/wiki/Mini_World_Changes";
                             tabelaBody.innerHTML += `<tr class="hover:bg-gray-750 transition border-b border-gray-700">
-                                <td class="p-4 font-semibold"><a href="${urlWiki}" target="_blank" class="text-amber-400 hover:underline">${nomeEvento} ↗</a></td>
+                                <td class="p-4 font-semibold text-amber-400">${nomeEvento}</td>
                                 <td class="p-4 text-gray-300">${locaisFixos[nomeEvento] || "Global"}</td>
                             </tr>`;
                             eventosAdicionados.add(nomeEvento);
@@ -193,18 +167,12 @@
                 const data = await response.json();
                 container.innerHTML = "";
                 data.news.slice(0, 3).forEach(item => {
-                    const d = item.date.split('-');
-                    const dataFormatada = `${d[2]}/${d[1]}/${d[0]}`;
                     container.innerHTML += `
                         <a href="${item.url}" target="_blank" class="block bg-gray-850 p-4 rounded-md border border-gray-750 hover:border-amber-600 transition group">
-                            <span class="text-xs font-semibold text-gray-500 block mb-1">${dataFormatada}</span>
-                            <h3 class="text-amber-100 font-bold text-sm mb-2 group-hover:text-amber-500 transition">${item.news}</h3>
-                            <span class="inline-block bg-amber-900/40 text-amber-400 text-[10px] uppercase font-bold px-2 py-0.5 rounded">${item.category}</span>
+                            <h3 class="text-amber-100 font-bold text-sm">${item.news}</h3>
                         </a>`;
                 });
-            } catch (e) { 
-                container.innerHTML = `<p class="text-red-400">Erro ao carregar notícias.</p>`; 
-            }
+            } catch (e) { container.innerHTML = `<p class="text-red-400">Erro ao carregar notícias.</p>`; }
         }
         
         carregarNoticias();
