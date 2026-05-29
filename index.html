@@ -1,181 +1,121 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tibia MWC Analyzer</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-900 text-gray-100 min-h-screen p-6 flex flex-col justify-between">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Tibia MWC Analyzer</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+    </head>
+    <body class="bg-gray-900 text-gray-100 min-h-screen p-6 flex flex-col justify-between">
+        <div class="max-w-4xl w-full mx-auto space-y-6 mb-8">
+            <header>
+                <h1 class="text-3xl font-bold text-amber-500">Tibia Mini World Changes Analyzer</h1>
+                <p class="text-gray-400 text-sm mt-1">
+                    Cole as linhas do seu Server Log abaixo para identificar os eventos ativos.
+                </p>
+            </header>
 
-    <div class="max-w-4xl w-full mx-auto space-y-6 mb-8">
+            <!-- ÁREA DE INPUT -->
+            <div class="relative">
+                <textarea
+                    id="serverLog"
+                    oninput="atualizarContador()"
+                    maxlength="5001"
+                    class="w-full h-44 p-4 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:border-amber-500 font-mono text-sm placeholder-gray-500"
+                    placeholder="Ex: 16:50:47 Poachers have slaughtered nearly all wild animals..."
+                ></textarea>
 
-        <header>
-            <h1 class="text-3xl font-bold text-amber-500">Tibia Mini World Changes Analyzer</h1>
-            <p class="text-gray-400 text-sm mt-1">Cole as linhas do seu Server Log abaixo para identificar os eventos ativos.</p>
-        </header>
+                <div id="contador" class="absolute bottom-2 right-4 text-xs text-gray-500 font-mono">0 / 5000</div>
+            </div>
 
-        <!-- ÁREA DE INPUT COM CONTADOR E BLOQUEIO -->
-        <div class="relative">
-            <textarea id="serverLog" 
-                oninput="atualizarContador()"
-                maxlength="5001" 
-                class="w-full h-44 p-4 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:border-amber-500 font-mono text-sm placeholder-gray-500" 
-                placeholder="Ex: 16:50:47 Poachers have slaughtered nearly all wild animals..."></textarea>
-            
-            <div id="contador" class="absolute bottom-2 right-4 text-xs text-gray-500 font-mono">
-                0 / 5000
+            <button
+                id="btnAnalisar"
+                onclick="processarLog()"
+                class="w-full md:w-auto px-6 py-3 bg-amber-600 hover:bg-amber-500 text-gray-900 font-bold rounded-lg transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+                🔍 Analisar Eventos Ativos
+            </button>
+
+            <p id="avisoLimite" class="text-red-500 text-sm font-bold hidden -mt-4">
+                ⚠️ Aviso: O texto excedeu o limite de 5000 caracteres.
+            </p>
+
+            <!-- TABELA -->
+            <div class="bg-gray-800 border border-gray-700 rounded-lg overflow-hidden">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-750 border-b border-gray-700 text-amber-400 text-sm">
+                            <th class="p-4 w-1/2">Mini World Change (Evento)</th>
+                            <th class="p-4 w-1/2">Localização Ativa</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelaResultados" class="divide-y divide-gray-700 text-sm">
+                        <tr>
+                            <td colspan="2" class="p-4 text-center text-gray-500 italic">
+                                Nenhum dado processado ainda.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
 
-        <!-- BOTÃO COM CONTROLE DE ESTADO -->
-        <button id="btnAnalisar" onclick="processarLog()" class="w-full md:w-auto px-6 py-3 bg-amber-600 hover:bg-amber-500 text-gray-900 font-bold rounded-lg transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed">
-            🔍 Analisar Eventos Ativos
-        </button>
+        <script>
+            const mapeamentoEventos = {
+                "The wild animals north of the Green Claw Swamp clearly dominate the area":
+                    "Poacher Caves (Bears/Boars/Wolves)",
+                "Poachers are ravaging the wildlife north of the Green Claw Swamp": "Poacher Caves (Hunters/Poachers)",
+                "Poachers have slaughtered nearly all wild animals north of the Green Claw Swamp. But vengeful spirits show up there now!":
+                    "Poacher Caves (Gloom/Ghost Wolves)",
+                "Strange sounds echo through Trapwood as hunters and dworcs fight": "Dworc Camp / Hunter Camp",
+                "A sandstorm travels through Darama, leading to isles full of deadly creatures": "Nightmare Isles",
+                "Stampede! The Ape God has stirred up Tiquanda's elephants": "Stampede",
+                "Nomads travel the eternal sands of Ankrahmun's desert": "Nomads",
+                "Looks like the Queen's own royal trees are being cut down": "Lumberjack",
+                "Bibby Bloodbath and her crew are roaming the lands": "Bibby Bloodbath",
+                "Adventurers have told of a Spirit Gate": "Spirit Gate",
+            };
 
-        <!-- MENSAGEM DE AVISO (HIDDEN POR PADRÃO) -->
-        <p id="avisoLimite" class="text-red-500 text-sm font-bold hidden -mt-4">
-            ⚠️ Aviso: O texto excedeu o limite de 5000 caracteres.
-        </p>
+            const locaisFixos = {
+                "Poacher Caves (Bears/Boars/Wolves)": "Orc Land (Cave Norte - Animais)",
+                "Poacher Caves (Hunters/Poachers)": "Orc Land (Cave Norte - Caçadores)",
+                "Poacher Caves (Gloom/Ghost Wolves)": "Orc Land (Cave Norte - Espíritos)",
+                "Dworc Camp / Hunter Camp": "Tiquanda (Trapwood)",
+                "Nightmare Isles": "Darama (Costa)",
+                Stampede: "Tiquanda (Elephants)",
+                Nomads: "Ankrahmun (Deserto)",
+                Lumberjack: "Carlin (Norte)",
+                "Bibby Bloodbath": "Zao (Mazzinor)",
+                "Spirit Gate": "Chyllfroest",
+            };
 
-        <!-- TABELA DE RESULTADOS -->
-        <div class="bg-gray-800 border border-gray-700 rounded-lg overflow-hidden">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-gray-750 border-b border-gray-700 text-amber-400 text-sm">
-                        <th class="p-4 w-1/2">Mini World Change (Evento)</th>
-                        <th class="p-4 w-1/2">Localização Ativa</th>
-                    </tr>
-                </thead>
-                <tbody id="tabelaResultados" class="divide-y divide-gray-700 text-sm">
-                    <tr>
-                        <td colspan="2" class="p-4 text-center text-gray-500 italic">Nenhum dado processado ainda.</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-
-        <!-- NOTÍCIAS -->
-        <div class="bg-gray-800 border border-gray-700 rounded-lg p-4">
-            <h2 class="text-xl font-bold text-amber-500 mb-4 flex items-center gap-2">
-                📰 Últimas Notícias do Tibia
-            </h2>
-            <div id="containerNoticias" class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <p class="text-gray-500 italic">Carregando notícias...</p>
-            </div>
-        </div>
-    </div>
-
-    <footer class="w-full text-center py-4 border-t border-gray-800 text-sm text-gray-500 mt-auto">
-        <p>© 2026 Tibia MWC Analyzer - Dados obtidos via TibiaFandom e TibiaData API.</p>
-    </footer>
-
-    <script>
-        // Mapeamento completo com as fases da Poacher Caves
-        const mapeamentoEventos = {
-            "Several banks in major coastal towns are being robbed!": "Bank Robbery",
-            "Bibby Bloodbath and her crew are roaming the lands": "Bibby Bloodbath",
-            "Sharpen your sword! The witch Wyda seems to be bored": "Bored Witch",
-            "A big iceberg has been washed up at the coast north of Port Hope": "Chakoya Iceberg",
-            "In case you have some spare tentacle pieces, you can now use Devovorga": "Devovorga's Essence",
-            "Strange sounds echo through Trapwood as hunters and dworcs fight": "Dworc Camp / Hunter Camp",
-            "A fiery fury gate has opened near one of the major cities": "Fury Gates",
-            "The volcano on Goroma sends its fiery message into the sky": "Goroma Eruption",
-            "The full moon has a strange impact on the island of Grimvale": "Grimvale Moon",
-            "A hive infestation has been sighted south-west of Liberty Bay": "Hive Outpost",
-            "Looks like the Queen's own royal trees are being cut down": "Lumberjack",
-            "A sandstorm travels through Darama, leading to isles full of deadly creatures": "Nightmare Isles",
-            "Nomads travel the eternal sands of Ankrahmun's desert": "Nomads",
-            "Not again! Noodles has taken some royal freedom and left the castle": "Noodles is Gone",
-            // Fases da Poacher Caves
-            "The wild animals north of the Green Claw Swamp clearly dominate the area": "Poacher Caves (Bears/Boars/Wolves)",
-            "Poachers are ravaging the wildlife north of the Green Claw Swamp": "Poacher Caves (Hunters/Poachers)",
-            "Poachers have slaughtered nearly all wild animals north of the Green Claw Swamp. But vengeful spirits show up there now!": "Poacher Caves (Gloom/Ghost Wolves)",
-            "Oriental ships sighted! A trader for exotic creature products": "Oriental Trader (Yasir)",
-            "The river south of the outlaw camp is flooding": "River Flood",
-            "The river in Zao Steppe runs deep, there may be more fish": "River Runs Deep",
-            "A whole nest of spiders needs to be exterminated as Mamma Longlegs": "Spider's Nest",
-            "Adventurers have told of a Spirit Gate": "Spirit Gate",
-            "Stampede! The Ape God has stirred up Tiquanda's elephants": "Stampede",
-            "Hail to the King! It's Kingsday in Thais": "Thais Kingsday",
-            "Judging by the unnerved mammoths in Svargrond, enough snow has melted": "Thawing"
-        };
-
-        const locaisFixos = {
-            "Poacher Caves (Bears/Boars/Wolves)": "Orc Land (Cave Norte - Animais)",
-            "Poacher Caves (Hunters/Poachers)": "Orc Land (Cave Norte - Caçadores)",
-            "Poacher Caves (Gloom/Ghost Wolves)": "Orc Land (Cave Norte - Espíritos)",
-            "Bored Witch": "Green Claw Swamp (Wyda)", 
-            "Oriental Trader (Yasir)": "Carlin / Ankrahmun / Liberty Bay",
-            "Bibby Bloodbath": "Global", "Bank Robbery": "Global", "Noodles is Gone": "Global"
-        };
-
-        // Função de atualização do contador e bloqueio de botão
-        function atualizarContador() {
-            const textarea = document.getElementById("serverLog");
-            const contador = document.getElementById("contador");
-            const btn = document.getElementById("btnAnalisar");
-            const aviso = document.getElementById("avisoLimite");
-            const length = textarea.value.length;
-            
-            contador.innerText = `${length} / 5000`;
-            
-            if (length > 5000) {
-                contador.className = "absolute bottom-2 right-4 text-xs text-red-500 font-mono";
-                btn.disabled = true;
-                aviso.classList.remove("hidden");
-            } else {
-                contador.className = "absolute bottom-2 right-4 text-xs text-gray-500 font-mono";
-                btn.disabled = false;
-                aviso.classList.add("hidden");
+            function atualizarContador() {
+                const textarea = document.getElementById("serverLog");
+                const contador = document.getElementById("contador");
+                const btn = document.getElementById("btnAnalisar");
+                const length = textarea.value.length;
+                contador.innerText = `${length} / 5000`;
+                btn.disabled = length > 5000;
             }
-        }
 
-        function processarLog() {
-            const textarea = document.getElementById("serverLog");
-            const tabelaBody = document.getElementById("tabelaResultados");
-            
-            tabelaBody.innerHTML = "";
-            const logTexto = textarea.value.replace(/[<>]/g, ''); 
-            const linhas = logTexto.split(/\r?\n/);
-            let encontrouAlgum = false;
-            const eventosAdicionados = new Set();
+            function processarLog() {
+                const logTexto = document.getElementById("serverLog").value.replace(/[<>]/g, "");
+                const tabelaBody = document.getElementById("tabelaResultados");
+                tabelaBody.innerHTML = "";
+                let encontrouAlgum = false;
 
-            linhas.forEach(linha => {
-                const linhaLimpa = linha.replace(/^\d{2}:\d{2}:\d{2}\s+/, "").trim();
                 for (const [mensagemChave, nomeEvento] of Object.entries(mapeamentoEventos)) {
-                    if (linhaLimpa.includes(mensagemChave)) {
-                        if (!eventosAdicionados.has(nomeEvento)) {
-                            tabelaBody.innerHTML += `<tr class="hover:bg-gray-750 transition border-b border-gray-700">
-                                <td class="p-4 font-semibold text-amber-400">${nomeEvento}</td>
-                                <td class="p-4 text-gray-300">${locaisFixos[nomeEvento] || "Global"}</td>
-                            </tr>`;
-                            eventosAdicionados.add(nomeEvento);
-                            encontrouAlgum = true;
-                        }
-                        break;
+                    if (logTexto.includes(mensagemChave)) {
+                        tabelaBody.innerHTML += `<tr class="border-b border-gray-700">
+                        <td class="p-4 font-semibold text-amber-400">${nomeEvento}</td>
+                        <td class="p-4 text-gray-300">${locaisFixos[nomeEvento] || "Global"}</td>
+                    </tr>`;
+                        encontrouAlgum = true;
                     }
                 }
-            });
-            if(!encontrouAlgum) tabelaBody.innerHTML = `<tr><td colspan="2" class="p-4 text-center text-red-400 italic">Nenhum evento detectado.</td></tr>`;
-        }
-
-        async function carregarNoticias() {
-            const container = document.getElementById("containerNoticias");
-            try {
-                const response = await fetch("https://api.tibiadata.com/v4/news/latest");
-                const data = await response.json();
-                container.innerHTML = "";
-                data.news.slice(0, 3).forEach(item => {
-                    container.innerHTML += `
-                        <a href="${item.url}" target="_blank" class="block bg-gray-850 p-4 rounded-md border border-gray-750 hover:border-amber-600 transition group">
-                            <h3 class="text-amber-100 font-bold text-sm">${item.news}</h3>
-                        </a>`;
-                });
-            } catch (e) { container.innerHTML = `<p class="text-red-400">Erro ao carregar notícias.</p>`; }
-        }
-        
-        carregarNoticias();
-    </script>
-</body>
+                if (!encontrouAlgum)
+                    tabelaBody.innerHTML = `<tr><td colspan="2" class="p-4 text-center text-red-400 italic">Nenhum evento detectado.</td></tr>`;
+            }
+        </script>
+    </body>
 </html>
